@@ -88,13 +88,12 @@ function main() {
 
 		spheres.forEach((lod, i) => {
 			const cameraDistance = lod.position.distanceTo(camera.position);
-			const color = lod.children[0].material.color
 			if(cameraDistance < 5){
-				color = new THREE.Color( GREEN );
+				lod.children[0].material.color = new THREE.Color( GREEN );
 			} else if (cameraDistance < 15) {
-				color = new THREE.Color( BLUE )
+				lod.children[0].material.color = new THREE.Color( BLUE )
 			} else {
-				color = new THREE.Color( RED )
+				lod.children[0].material.color = new THREE.Color( RED )
 			}
 		});
 

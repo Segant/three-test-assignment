@@ -36632,8 +36632,6 @@ function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "functio
 
 function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
 
-function _readOnlyError(name) { throw new TypeError("\"" + name + "\" is read-only"); }
-
 var RED = 0xda0000;
 var GREEN = 0x00da00;
 var BLUE = 0x0000da;
@@ -36713,14 +36711,13 @@ function main() {
     time *= 0.0001;
     spheres.forEach(function (lod, i) {
       var cameraDistance = lod.position.distanceTo(camera.position);
-      var color = lod.children[0].material.color;
 
       if (cameraDistance < 5) {
-        new THREE.Color(GREEN), _readOnlyError("color");
+        lod.children[0].material.color = new THREE.Color(GREEN);
       } else if (cameraDistance < 15) {
-        new THREE.Color(BLUE), _readOnlyError("color");
+        lod.children[0].material.color = new THREE.Color(BLUE);
       } else {
-        new THREE.Color(RED), _readOnlyError("color");
+        lod.children[0].material.color = new THREE.Color(RED);
       }
     });
     controls.update(time * .3);
