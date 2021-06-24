@@ -36632,6 +36632,12 @@ function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "functio
 
 function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
 
+function _readOnlyError(name) { throw new TypeError("\"" + name + "\" is read-only"); }
+
+var RED = 0xda0000;
+var GREEN = 0x00da00;
+var BLUE = 0x0000da;
+
 function main() {
   var canvas = document.querySelector('#canvas');
   var canvasWidth = canvas.width = window.innerWidth;
@@ -36655,6 +36661,7 @@ function main() {
     var light = new THREE.AmbientLight(color, intensity);
     var light2 = new THREE.PointLight(color, intensity);
     light.position.set(2, 5, 10);
+    light2.position.set(2, 5, 10);
     scene.add(light);
     scene.add(light2);
   } //camera
@@ -36667,60 +36674,56 @@ function main() {
   var camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
   camera.position.z = 3; // geometry
 
-  var geometry = new THREE.SphereGeometry(1, 15, 15); // material
+  var geometry = new THREE.IcosahedronGeometry(2, 2, 2); // material
 
   var material = new THREE.MeshPhongMaterial({
-    color: 0xFF00FF
+    color: 0xdadada
   });
-  var lod = new THREE.LOD();
-  lod.autoUpdate = false;
-
-  function makeInstance(geometry, color) {
-    var material = new THREE.MeshPhongMaterial({
-      color: color,
-      wireframe: true
-    });
-    var sphere = new THREE.Mesh(geometry, material);
-    scene.add(sphere);
-    sphere.position.x = randomInRange(-5, 5);
-    sphere.position.y = randomInRange(-5, 5);
-    sphere.position.z = randomInRange(-5, 5);
-    return sphere;
-  }
-
   var controls = new _FlyControls.FlyControls(camera, renderer.domElement);
   controls.movementSpeed = 0.33;
-  controls.rollSpeed = .3;
+  controls.rollSpeed = .33;
   controls.autoForward = false;
+
+  function makeInstance(geometry, material) {
+    var materialCopy = material.clone();
+    var geometryCopy = geometry.clone();
+    var lod = new THREE.LOD();
+
+    for (var i = 0; i < 3; i++) {
+      var _geometry = new THREE.IcosahedronGeometry(1, 3 - i);
+
+      var mesh = new THREE.Mesh(_geometry, materialCopy);
+      lod.addLevel(mesh, i * 5);
+    }
+
+    lod.position.set(randomInRange(-15, 15), randomInRange(-15, 15), randomInRange(-15, 15));
+    scene.add(lod);
+    return lod;
+  }
+
   var spheres = [];
 
   for (var i = 0; i < 30; i++) {
-    spheres.push(makeInstance(geometry, 0xff00ff, 0)); // lod.addLevel( spheres[i], 15 );
+    spheres.push(makeInstance(geometry, material));
   }
 
-  var RED = 0xda0000;
-  var GREEN = 0x00da00;
-  var BLUE = 0x0000da;
+  console.log(spheres);
 
   function render(time) {
     time *= 0.0001;
-    spheres.forEach(function (sphere, i) {
-      var speed = 1 + i / 2 * .1;
-      var rot = time * speed; // sphere.rotation.x = rot;
-      // sphere.rotation.y = rot;
+    spheres.forEach(function (lod, i) {
+      var cameraDistance = lod.position.distanceTo(camera.position);
+      var color = lod.children[0].material.color;
 
-      console.log(sphere.position.distanceTo(camera.position));
-      var cameraDistance = sphere.position.distanceTo(camera.position);
-
-      if (cameraDistance < 3) {
-        sphere.material.color = new THREE.Color(GREEN);
-      } else if (cameraDistance < 6) {
-        sphere.material.color = new THREE.Color(BLUE);
+      if (cameraDistance < 5) {
+        new THREE.Color(GREEN), _readOnlyError("color");
+      } else if (cameraDistance < 15) {
+        new THREE.Color(BLUE), _readOnlyError("color");
       } else {
-        sphere.material.color = new THREE.Color(RED);
+        new THREE.Color(RED), _readOnlyError("color");
       }
     });
-    controls.update(time / 5);
+    controls.update(time * .3);
     renderer.render(scene, camera);
     requestAnimationFrame(render);
   }
@@ -36757,7 +36760,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "27426" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "1028" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};

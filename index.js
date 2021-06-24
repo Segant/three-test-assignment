@@ -1,6 +1,10 @@
 import * as THREE from 'three';
 import { FlyControls } from 'three/examples/jsm/controls/FlyControls';
 
+const RED = 0xda0000;
+const GREEN = 0x00da00;
+const BLUE = 0x0000da;
+
 function main() {
 	const canvas = document.querySelector('#canvas');
 	const canvasWidth = canvas.width = window.innerWidth;
@@ -24,6 +28,7 @@ function main() {
 		const light = new THREE.AmbientLight(color, intensity);
 		const light2 = new THREE.PointLight(color, intensity);
 		light.position.set(2, 5, 10);
+		light2.position.set(2, 5, 10);
 		scene.add(light);
 		scene.add(light2);
 	}
@@ -38,68 +43,62 @@ function main() {
 	camera.position.z = 3;
 
 	// geometry
-	const geometry = new THREE.SphereGeometry(1, 15, 15);
+	const geometry = new THREE.IcosahedronGeometry( 2,2,2 )
 
 	// material
-	const material = new THREE.MeshPhongMaterial({ color: 0xFF00FF });
-
-	const lod = new THREE.LOD();
-	lod.autoUpdate = false;
-	
-	function makeInstance(geometry, color) {
-		const material = new THREE.MeshPhongMaterial({ color, 
-			wireframe: true
-		});
-		
-		const sphere = new THREE.Mesh(geometry, material);
-		scene.add(sphere);
-		
-		sphere.position.x = randomInRange(-5,5);
-		sphere.position.y = randomInRange(-5,5);
-		sphere.position.z = randomInRange(-5,5);
-		
-		return sphere;
-	}
+	const material = new THREE.MeshPhongMaterial({ color: 0xdadada});
 	
 	const controls = new FlyControls(camera, renderer.domElement);
 	controls.movementSpeed = 0.33;
-	controls.rollSpeed = .3;
+	controls.rollSpeed = .33;
 	controls.autoForward = false;
 	
-	
-	let spheres = [];
-	for (let i = 0; i < 30; i++) {
-		spheres.push(makeInstance(geometry, 0xff00ff, 0))
-		// lod.addLevel( spheres[i], 15 );
+	function makeInstance(geometry, material) {
+		const materialCopy = material.clone();
+		const geometryCopy = geometry.clone();
+		
+		const lod = new THREE.LOD();
+		
+		for( let i = 0; i < 3; i++ ) { 
+			const geometry = new THREE.IcosahedronGeometry( 1, 3 - i )
+			const mesh = new THREE.Mesh( geometry, materialCopy );
+			
+			lod.addLevel( mesh, i * 5 );
+		}
+		lod.position.set(
+			randomInRange(-15,15),
+			randomInRange(-15,15),
+			randomInRange(-15,15)
+		);
+		scene.add( lod );
+		
+		return lod;
 	}
 
-	const RED = 0xda0000;
-	const GREEN = 0x00da00;
-	const BLUE = 0x0000da;
 
+	let spheres = [];
+	for (let i = 0; i < 30; i++) {
+		spheres.push(makeInstance(geometry, material))
+	}
+
+	console.log(spheres);
 	
 	function render(time) {
 		time *= 0.0001;
 
-		spheres.forEach((sphere, i) => {
-			const speed = 1 + (i / 2) * .1;
-			const rot = time * speed;
-			// sphere.rotation.x = rot;
-			// sphere.rotation.y = rot;
-
-			console.log(sphere.position.distanceTo(camera.position));
-			
-			const cameraDistance = sphere.position.distanceTo(camera.position);
-			if(cameraDistance < 3 ){
-				sphere.material.color = new THREE.Color( GREEN )
-			} else if (cameraDistance < 6) {
-				sphere.material.color = new THREE.Color( BLUE )
+		spheres.forEach((lod, i) => {
+			const cameraDistance = lod.position.distanceTo(camera.position);
+			const color = lod.children[0].material.color
+			if(cameraDistance < 5){
+				color = new THREE.Color( GREEN );
+			} else if (cameraDistance < 15) {
+				color = new THREE.Color( BLUE )
 			} else {
-				sphere.material.color = new THREE.Color( RED )
+				color = new THREE.Color( RED )
 			}
 		});
 
-		controls.update(time / 5);
+		controls.update(time * .3);
 		renderer.render(scene, camera);
 
 		requestAnimationFrame(render);
